@@ -81,3 +81,38 @@ avg = results.groupby(['method']).mean()
     # ACU
     # LOG
 
+# generate list of top ranking methods
+# subset rankings by those top ones
+top = ['DC', 'DOK', 'RT', 'BWE', 'LMC', 'SFX', 'STF', 'TPR', 'ACU', 'LOG'] 
+sub_rankings = rankings[rankings.SystemName.isin(top)]   
+
+sample_sub['Year'] = sample_sub['ID'].str.split('_').str[0]
+sample_sub['Team_A'] = sample_sub['ID'].str.split('_').str[1]
+sample_sub['Team_B'] = sample_sub['ID'].str.split('_').str[2]
+
+sample_sub.Year = sample_sub.Year.astype('int64')
+sample_sub.Team_A = sample_sub.Team_A.astype('int64')
+sample_sub.Team_B = sample_sub.Team_B.astype('int64')
+
+
+for method in top:
+    for year in years:
+        
+        # subset rankings by method and year
+        rank = rankings[rankings.SystemName == method]
+        rank = rank[rank.Season == year]
+
+        # create dictionary of rank for each team
+        rank_dict = pd.Series(rank.OrdinalRank.values, index=rank.TeamID).to_dict()
+
+        # subset tourney matches by year
+        sub = sample_sub[sample_sub.Year == year]
+
+        # map each team's rank
+        sub[method + 'A_rank'] = sub['Team_A'].map(rank_dict)
+        sub[method + 'B_rank'] = sub['Team_B'].map(rank_dict)
+
+    
+    
+    
+
