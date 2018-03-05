@@ -18,14 +18,15 @@ os.chdir(path)
 # load data
 rankings = pd.read_csv('MasseyOrdinals.csv')
 tourney = pd.read_csv('NCAATourneyCompactResults.csv')
+sample_sub = pd.read_csv('SampleSubmissionStage1.csv')
 
-# subset columns and only use 2011+ data
-tourney = tourney[tourney.Season > 2010]
+# subset columns and only use 2013+ data
+tourney = tourney[tourney.Season > 2013]
 tourney = tourney[['Season', 'WTeamID', 'LTeamID']]
 
-# subset ranking day and only use 2011+ data
+# subset ranking day and only use 2013+ data
 rankings = rankings[rankings.RankingDayNum == 133]
-rankings = rankings[rankings.Season > 2010]
+rankings = rankings[rankings.Season > 2013]
 
 # array of ranking methods and years
 methods = rankings.SystemName.unique()
@@ -61,3 +62,22 @@ for method in methods:
 
 # change year to an int type
 results.year = results.year.astype('int64')
+
+# we assume a result of 0 indicates no rankings for that year, so drop those
+results = results[results.result != 0]
+
+# group by and average results to determine top ranking methods
+avg = results.groupby(['method']).mean()
+
+# top ranking methods are:
+    # DC
+    # DOK
+    # RT
+    # BWE
+    # LMC
+    # SFX
+    # STF
+    # TPR
+    # ACU
+    # LOG
+
