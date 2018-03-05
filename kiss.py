@@ -93,26 +93,48 @@ sample_sub['Team_B'] = sample_sub['ID'].str.split('_').str[2]
 sample_sub.Year = sample_sub.Year.astype('int64')
 sample_sub.Team_A = sample_sub.Team_A.astype('int64')
 sample_sub.Team_B = sample_sub.Team_B.astype('int64')
+del sample_sub['Pred']
 
+pred = pd.DataFrame()
 
-for method in top:
-    for year in years:
+for year in years:
+    
+    # subset rankings by year
+    rank = rank[rank.Season == year]
+
+    # subset tourney matches by year
+    sub = sample_sub[sample_sub.Year == year]
+
+    for method in top:
         
-        # subset rankings by method and year
+        # subset rankings by method
         rank = rankings[rankings.SystemName == method]
-        rank = rank[rank.Season == year]
 
         # create dictionary of rank for each team
         rank_dict = pd.Series(rank.OrdinalRank.values, index=rank.TeamID).to_dict()
 
-        # subset tourney matches by year
-        sub = sample_sub[sample_sub.Year == year]
-
         # map each team's rank
-        sub[method + 'A_rank'] = sub['Team_A'].map(rank_dict)
-        sub[method + 'B_rank'] = sub['Team_B'].map(rank_dict)
+        sub[method + '_A_rank'] = sub['Team_A'].map(rank_dict)
+        sub[method + '_B_rank'] = sub['Team_B'].map(rank_dict)
+        
+    pred = pred.append(sub, ignore_index=True)
+    
+    
+def abc(data):
+    
+    if (data[method + '_A_rank'] < data[method + '_B_rank']):
+        return 1
+    else:
+        return 0
+    
+        
+        
+for method in top:
+    pred[method + '_Choice'] = pred.apply(abc,axis = 1)
+    
 
-    
-    
-    
+pred['Pred'] = pred.iloc[:,-10:].sum(axis=1)/10
+
+final = pred[['ID', 'Pred']]
+final.to_csv('final.csv')
 
