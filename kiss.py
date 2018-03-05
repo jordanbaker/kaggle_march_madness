@@ -23,31 +23,41 @@ tourney = pd.read_csv('NCAATourneyCompactResults.csv')
 tourney = tourney[tourney.Season > 2010]
 tourney = tourney[['Season', 'WTeamID', 'LTeamID']]
 
+# subset ranking day and only use 2011+ data
 rankings = rankings[rankings.RankingDayNum == 133]
 rankings = rankings[rankings.Season > 2010]
 
+# array of ranking methods and years
 methods = rankings.SystemName.unique()
 years = tourney.Season.unique()
 
-
+# initialize empty results dataframe
 results = pd.DataFrame()
 
+# loop through each method and year
 for method in methods:
     for year in years:
         
+        # subset rankings by method and year
         rank = rankings[rankings.SystemName == method]
         rank = rank[rank.Season == year]
 
-        rank = pd.Series(rank.OrdinalRank.values, index=rank.TeamID).to_dict()
+        # create dictionary of rank for each team
+        rank_dict = pd.Series(rank.OrdinalRank.values, index=rank.TeamID).to_dict()
 
+        # subset tourney matches by year
         match = tourney[tourney.Season == year]
 
-        match['W_rank'] = match['WTeamID'].map(dictionary)
-        match['L_rank'] = match['LTeamID'].map(dictionary)
+        # map each team's rank
+        match['W_rank'] = match['WTeamID'].map(rank_dict)
+        match['L_rank'] = match['LTeamID'].map(rank_dict)
         
+        # calculate % of matches correctly predicted by ranks
         result = len(match[match.W_rank < match.L_rank])/len(match)
     
+        # append results
         temp = pd.Series([method, year, result], index=['method', 'year', 'result'])
         results = results.append(temp, ignore_index=True)
 
+# change year to an int type
 results.year = results.year.astype('int64')
