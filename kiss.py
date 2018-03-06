@@ -81,9 +81,13 @@ avg = results.groupby(['method']).mean()
     # ACU
     # LOG
 
+test = rankings[rankings.SystemName == 'BUR']
+len(test.Season.unique())
+    
 # generate list of top ranking methods
 # subset rankings by those top ones
-top = ['DC', 'DOK', 'RT', 'BWE', 'LMC', 'SFX', 'STF', 'TPR', 'ACU', 'LOG'] 
+top = ['7OT', 'RTP', 'STH', 'LMC', 'CRO', 'BBT', 'DC', 'KPK', 'SAG', 'BUR'] 
+top = rankings.SystemName.unique()
 sub_rankings = rankings[rankings.SystemName.isin(top)]   
 
 sample_sub['Year'] = sample_sub['ID'].str.split('_').str[0]
@@ -100,7 +104,7 @@ pred = pd.DataFrame()
 for year in years:
     
     # subset rankings by year
-    rank = rank[rank.Season == year]
+    rank = sub_rankings[sub_rankings.Season == year]
 
     # subset tourney matches by year
     sub = sample_sub[sample_sub.Year == year]
@@ -108,7 +112,7 @@ for year in years:
     for method in top:
         
         # subset rankings by method
-        rank = rankings[rankings.SystemName == method]
+        rank = sub_rankings[sub_rankings.SystemName == method]
 
         # create dictionary of rank for each team
         rank_dict = pd.Series(rank.OrdinalRank.values, index=rank.TeamID).to_dict()
@@ -133,7 +137,7 @@ for method in top:
     pred[method + '_Choice'] = pred.apply(abc,axis = 1)
     
 
-pred['Pred'] = pred.iloc[:,-10:].sum(axis=1)/10
+pred['Pred'] = pred.iloc[:,-len(top):].sum(axis=1)/len(top)
 
 final = pred[['ID', 'Pred']]
 final.to_csv('final.csv')
