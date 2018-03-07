@@ -28,9 +28,9 @@ tourney = tourney[['Season', 'WTeamID', 'LTeamID']]
 rankings = rankings[rankings.RankingDayNum == 133]
 rankings = rankings[rankings.Season > 2013]
 
-# array of ranking methods and years
+# list of ranking methods and years
 methods = list(rankings.SystemName.unique())
-years = tourney.Season.unique()
+years = list(tourney.Season.unique())
 
 methods_full = pd.DataFrame()
 
@@ -111,25 +111,32 @@ top = ['7OT', 'RTP', 'STH', 'LMC', 'CRO', 'BBT', 'DC', 'KPK', 'SAG', 'BUR']
 # subset rankings by those top ones
 sub_rankings = rankings[rankings.SystemName.isin(top)]   
 
+# extract year, Team A, and Team B from ID of sample submission file
 sample_sub['Year'] = sample_sub['ID'].str.split('_').str[0]
 sample_sub['Team_A'] = sample_sub['ID'].str.split('_').str[1]
 sample_sub['Team_B'] = sample_sub['ID'].str.split('_').str[2]
 
+# convert extracted features to ints
 sample_sub.Year = sample_sub.Year.astype('int64')
 sample_sub.Team_A = sample_sub.Team_A.astype('int64')
 sample_sub.Team_B = sample_sub.Team_B.astype('int64')
+
+# del Pred column (pre-filled 0.5 probs) so we can create our own
 del sample_sub['Pred']
 
+# initialize empty df for predictions
 pred = pd.DataFrame()
 
+# loop through by year to pull kp ratings for all years
 for year in years:
     
     # subset rankings by year
     rank = sub_rankings[sub_rankings.Season == year]
 
-    # subset tourney matches by year
+    # subset matches by year
     sub = sample_sub[sample_sub.Year == year]
 
+    # loop through different ranking methods
     for method in top:
         
         # subset rankings by method
@@ -142,32 +149,37 @@ for year in years:
         sub[method + '_A_rank'] = sub['Team_A'].map(rank_dict)
         sub[method + '_B_rank'] = sub['Team_B'].map(rank_dict)
         
+    # append rankings
     pred = pred.append(sub, ignore_index=True)
     
     
-def abc(data):
+# function to assign a win (1) to the lower ranked team, by method
+def predict_win(data):
     
     if (data[method + '_A_rank'] < data[method + '_B_rank']):
         return 1
     else:
         return 0
     
-        
+# use previously defined function to predict wins for all matches
 for method in top:
-    pred[method + '_Choice'] = pred.apply(abc,axis = 1)
-    
+    pred[method + '_Choice'] = pred.apply(predict_win, axis = 1)
+
+# use 1s (wins) and 0s (losses) to generate 'probability' of win based on rank
 pred['Pred'] = pred.iloc[:,-len(top):].sum(axis=1)/len(top)
 
+# alter probabilities to minimize/maximize score
 pred.loc[pred.Pred == 0, 'Pred'] = .22
 pred.loc[pred.Pred == 1, 'Pred'] = .77
 
-# random resting code
-# temp = rankings[rankings.Season == 2014]
-# temp = temp[temp.SystemName == 'BBT']
-# temp = temp[temp.OrdinalRank == 1112]
-len(pred[pred.Pred == 0])/len(pred)
-
-
+# create final submission file
 final = pred[['ID', 'Pred']]
 final.to_csv('final.csv')
+
+# NEW IDEA CODE
+# SCALE ALL RANKING METHODS???
+pred['diff'] = pred.A_rank - pred.B_rank
+pred['Pred'] = ((pred['diff'] - np.min(pred['diff'])) / (np.max(pred['diff'])
+- np.min(pred['diff'])) ) * (0.72 - 0.22) + 0.2
+
 
