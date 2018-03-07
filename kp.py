@@ -72,6 +72,22 @@ pred['Pred'] = pred.apply(predict_win, axis = 1)
 pred.loc[pred.Pred == 0, 'Pred'] = .22
 pred.loc[pred.Pred == 1, 'Pred'] = .72
 
+# NEW IDEA CODE
+# SCALE ALL RANKING METHODS???
+pred['Diff'] = pred.A_rank - pred.B_rank
+
+OldRange = (np.max(pred['Diff']) - np.min(pred['Diff']))  
+NewRange = (0.8 - 0.2)  
+pred['Diff2'] = (((pred['Diff'] - np.min(pred['Diff'])) * NewRange) / OldRange) + 0.2
+
+
+
+
+
+pred['Diff'] = abs(pred.A_rank - pred.B_rank)
+pred['Pred2'] = ((pred['Diff'] - np.min(pred['Diff'])) / (np.max(pred['Diff'])
+- np.min(pred['Diff'])) ) * (1 - 0) + 0
+
 # create final submission file
 final = pred[['ID', 'Pred']]
 final.to_csv('final.csv')
