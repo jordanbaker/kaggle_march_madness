@@ -29,8 +29,24 @@ rankings = rankings[rankings.RankingDayNum == 133]
 rankings = rankings[rankings.Season > 2013]
 
 # array of ranking methods and years
-methods = rankings.SystemName.unique()
+methods = list(rankings.SystemName.unique())
 years = tourney.Season.unique()
+
+methods_full = pd.DataFrame()
+
+for method in methods:
+    
+    temp_df = rankings[rankings.SystemName == method]
+    temp_size = len(temp_df.Season.unique())
+    
+    # append results
+    temp = pd.Series([method, temp_size], index=['method', 'size'])
+    methods_full = methods_full.append(temp, ignore_index=True)
+
+
+methods_full = methods_full.loc[methods_full['size'] == 4]
+
+methods = methods_full.method.unique()
 
 # initialize empty results dataframe
 results = pd.DataFrame()
@@ -70,24 +86,29 @@ results = results[results.result != 0]
 avg = results.groupby(['method']).mean()
 
 # top ranking methods are:
-    # DC
-    # DOK
-    # RT
-    # BWE
-    # LMC
-    # SFX
-    # STF
-    # TPR
-    # ACU
-    # LOG
+    # 
+    # 
+    #
+    # 
+    # 
+    # 
+    # 
+    # 
+    # 
+    # 
 
-test = rankings[rankings.SystemName == 'BUR']
-len(test.Season.unique())
-    
+  
 # generate list of top ranking methods
 # subset rankings by those top ones
 top = ['7OT', 'RTP', 'STH', 'LMC', 'CRO', 'BBT', 'DC', 'KPK', 'SAG', 'BUR'] 
-top = rankings.SystemName.unique()
+# top = ['7OT']
+# top = rankings.SystemName.unique()
+#top = list(avg.index)
+#top.remove('USA')
+#top.remove('AP')
+#top.remove('DES')
+
+# subset rankings by those top ones
 sub_rankings = rankings[rankings.SystemName.isin(top)]   
 
 sample_sub['Year'] = sample_sub['ID'].str.split('_').str[0]
@@ -112,10 +133,10 @@ for year in years:
     for method in top:
         
         # subset rankings by method
-        rank = sub_rankings[sub_rankings.SystemName == method]
+        temp_rank = rank[rank.SystemName == method]
 
         # create dictionary of rank for each team
-        rank_dict = pd.Series(rank.OrdinalRank.values, index=rank.TeamID).to_dict()
+        rank_dict = pd.Series(temp_rank.OrdinalRank.values, index=temp_rank.TeamID).to_dict()
 
         # map each team's rank
         sub[method + '_A_rank'] = sub['Team_A'].map(rank_dict)
@@ -132,12 +153,20 @@ def abc(data):
         return 0
     
         
-        
 for method in top:
     pred[method + '_Choice'] = pred.apply(abc,axis = 1)
     
-
 pred['Pred'] = pred.iloc[:,-len(top):].sum(axis=1)/len(top)
+
+pred.loc[pred.Pred == 0, 'Pred'] = .22
+pred.loc[pred.Pred == 1, 'Pred'] = .77
+
+# random resting code
+# temp = rankings[rankings.Season == 2014]
+# temp = temp[temp.SystemName == 'BBT']
+# temp = temp[temp.OrdinalRank == 1112]
+len(pred[pred.Pred == 0])/len(pred)
+
 
 final = pred[['ID', 'Pred']]
 final.to_csv('final.csv')
