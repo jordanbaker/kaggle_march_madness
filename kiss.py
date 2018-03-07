@@ -85,28 +85,26 @@ results = results[results.result != 0]
 # group by and average results to determine top ranking methods
 avg = results.groupby(['method']).mean()
 
-# top ranking methods are:
-    # 
-    # 
-    #
-    # 
-    # 
-    # 
-    # 
-    # 
-    # 
-    # 
-
+# top ranking methods (with 4 full years) are:
+    # 7OT
+    # RTP
+    # STH
+    # LMC
+    # CRO
+    # BBT
+    # DC
+    # KPK
+    # SAG
+    # BUR
   
 # generate list of top ranking methods
-# subset rankings by those top ones
-top = ['7OT', 'RTP', 'STH', 'LMC', 'CRO', 'BBT', 'DC', 'KPK', 'SAG', 'BUR'] 
-# top = ['7OT']
 # top = rankings.SystemName.unique()
+top = ['7OT', 'RTP', 'STH', 'LMC', 'CRO', 'BBT', 'DC', 'KPK', 'SAG', 'BUR'] 
 #top = list(avg.index)
 #top.remove('USA')
 #top.remove('AP')
 #top.remove('DES')
+# top = ['7OT']
 
 # subset rankings by those top ones
 sub_rankings = rankings[rankings.SystemName.isin(top)]   
